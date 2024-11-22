@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json
+    networks:
+      - backend
+    user: "5050:5050"
+    depends_on:
+      - db
+#        condition: service_healthy
+  backend:
+    build:
+      context: ./spring-backend
+    container_name: spring-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mydb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  frontend:
+    build:
+      context: ./react-frontend
+    container_name: react-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend
+    depends_on:
+      - backend
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+
+
