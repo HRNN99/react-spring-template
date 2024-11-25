@@ -1,13 +1,15 @@
-# Use OpenJDK 21 as base image
-FROM openjdk:21-jdk-slim AS build
+# Usar una imagen de Maven con Java 17 preinstalado
+FROM maven:3.9.4-eclipse-temurin-17 AS build
 
+# Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /app
-COPY . .
 
-# Build the application using Maven
-RUN ./mvnw clean install
+# Copiar los archivos necesarios para el proyecto
+COPY pom.xml .
+#COPY src ./src
 
-# Create a minimal runtime image with JDK 21
-FROM openjdk:21-jdk-slim
-COPY --from=build /app/target/app-0.0.1-SNAPSHOT.jar /backend.jar
-ENTRYPOINT ["java", "-jar", "/backend.jar"]
+# Ejecutar la construcción (esto solo se usará para precompilación en producción)
+RUN mvn dependency:go-offline -B
+
+# Fase de desarrollo: Usar directamente Maven para correr la app
+CMD ["mvn", "spring-boot:run"]

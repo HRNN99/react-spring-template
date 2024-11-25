@@ -44,6 +44,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
     ports:
       - "8080:8080"
+    volumes:
+      - ./spring-backend:/app
+    command: ./mvnw spring-boot:run
     depends_on:
       - db
     networks:
